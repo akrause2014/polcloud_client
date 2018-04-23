@@ -67,14 +67,14 @@ def main(args):
     if args.pool:
         job.set_pool(args.pool)
     else:
-        job.create_pool(size=2)
+        job.create_pool(size=args.nodes)
     print("Using pool: %s" % job.pool.get_info())
 
     print("Waiting for pool...")
     while not job.pool.is_ready():
         time.sleep(5)
     print('Pool is ready: submitting job...')
-    job_id = job.submit(size=2, wall_clock='02:00')
+    job_id = job.submit(size=args.nodes, wall_clock='02:00')
     print('Submitted job: %s' % job_id)
     print('Waiting for job...')
 
@@ -95,8 +95,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Create an Azure pool and submit job')
     parser.add_argument('xml_file', nargs='?', help='HemeLB XML input file')
-    parser.add_argument('-s', '--spec', help='existing job spec')
-    parser.add_argument('-p', '--pool', help='existing pool')
+    parser.add_argument('-s', '--spec', help='id of existing job spec')
+    parser.add_argument('-p', '--pool', help='existing pool id')
+    parser.add_argument('-n', '--nodes', help='number of requested nodes', default=2)
     parser.add_argument('-t', '--token', help='user token', required=True)
     parser.add_argument('-d', '--delete-pool', action='store_true', help='delete pool when job is complete')
     parser.add_argument('--upload-only', action='store_true', help='upload inputs only')
