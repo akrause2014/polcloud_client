@@ -22,17 +22,19 @@ def get_callback(file_name):
         sys.stdout.flush()
     return progress_callback
 
-if __name__ == '__main__':
+def upload_inputs(job, *files):
+    # upload input files in one step:
+    # job.create_input(xml_file, gmy_file)
 
-    parser = argparse.ArgumentParser(description='Create an Azure pool and submit job')
-    parser.add_argument('xml_file', nargs='?', help='HemeLB XML input file')
-    parser.add_argument('-s', '--spec', help='existing job spec')
-    parser.add_argument('-p', '--pool', help='existing pool')
-    parser.add_argument('-t', '--token', help='user token', required=True)
-    parser.add_argument('-d', '--delete-pool', action='store_true', help='delete pool when job is complete')
-    parser.add_argument('--upload-only', action='store_true', help='upload inputs only')
-    args = parser.parse_args()
+    job.create_input()
+    print('Created input: %s' % job.inputs)
+    for file in files:
+        print('\nUploading %s' % file)
+        job.update_input(file, get_callback(file))
+    print('\nInput upload complete.')
+    print(json.dumps(job.get_input_info(), indent=4))
 
+def main(args):
     job = Job()
     job.set_user(args.token)
 
@@ -44,18 +46,9 @@ if __name__ == '__main__':
         xml_file = args.xml_file
         gmy_file=get_gmy_filename_from_xml(xml_file)
 
-        # upload input files in one step:
-        # job.create_input(xml_file, gmy_file)
-
-        # upload input files in several steps (if uploads are slow)
-        job.create_input()
-        print('Created input: %s' % job.inputs)
-        print('Uploading %s' % xml_file)
-        job.update_input(xml_file, get_callback(xml_file))
-        print('\nUploading %s' % gmy_file)
-        job.update_input(gmy_file, get_callback(gmy_file))
-        print('\nInput complete.')
-        print(json.dumps(job.get_input_info(), indent=4))
+        upload_inputs(job, xml_file, gmy_file)
+        if args.upload_only:
+            return
 
         # create a job spec
         with open('job_template.json') as f:
@@ -96,3 +89,16 @@ if __name__ == '__main__':
         print('Deleted pool')
     else:
         print('Pool is running: %s' % job.pool.get_info())
+
+
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Create an Azure pool and submit job')
+    parser.add_argument('xml_file', nargs='?', help='HemeLB XML input file')
+    parser.add_argument('-s', '--spec', help='existing job spec')
+    parser.add_argument('-p', '--pool', help='existing pool')
+    parser.add_argument('-t', '--token', help='user token', required=True)
+    parser.add_argument('-d', '--delete-pool', action='store_true', help='delete pool when job is complete')
+    parser.add_argument('--upload-only', action='store_true', help='upload inputs only')
+    args = parser.parse_args()
+    main(args)
