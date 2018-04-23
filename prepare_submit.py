@@ -4,7 +4,7 @@ import os
 import string
 import sys
 import time
-from .client import Job, Pool
+from polcloud.client import Job, Pool
 
 def get_gmy_filename_from_xml(xml_filename):
     from xml.etree import ElementTree
