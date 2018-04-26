@@ -1,10 +1,11 @@
 import argparse
 import json
-import os
+import os.path
 import string
 import sys
 import time
 from polcloud.client import Job, Pool
+from six.moves import urllib
 
 def get_gmy_filename_from_xml(xml_filename):
     from xml.etree import ElementTree
@@ -33,6 +34,17 @@ def upload_inputs(job, *files):
         job.update_input(file, get_callback(file))
     print('\nInput upload complete.')
     print(json.dumps(job.get_input_info(), indent=4))
+
+def download_outputs(job, local_path):
+    for out in job.list_outputs():
+        out_path = os.path.join(local_path, out['path'])
+        # Make any necessary containing directories
+        out_dir = os.path.dirname(out_path)
+        if out_dir != '' and not os.path.exists(out_dir):
+            os.makedirs(out_dir)
+
+        print(out_path, ' <- ', out['url'])
+        urllib.request.urlretrieve(out['url'], out_path)
 
 def main(args):
     job = Job()
@@ -82,7 +94,8 @@ def main(args):
         time.sleep(5)
 
     print('Job is complete')
-    print(json.dumps(job.list_outputs(), indent=4))
+    print('Downloading outputs')
+    download_outputs(job, '.')
 
     if args.delete_pool:
         job.pool.delete()
