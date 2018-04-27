@@ -53,6 +53,7 @@ def main(args):
     if args.spec:
         job.spec = args.spec
         job.inputs = job.get_job_spec()['inputs']
+        print("Job spec: %s" % job.get_job_spec())
     else:
         # input files
         xml_file = args.xml_file
@@ -86,7 +87,7 @@ def main(args):
     while not job.pool.is_ready():
         time.sleep(5)
     print('Pool is ready: submitting job...')
-    job_id = job.submit(size=args.nodes, wall_clock='02:00')
+    job_id = job.submit(size=args.nodes, wall_clock='02:00', delete_pool=args.delete_pool)
     print('Submitted job: %s' % job_id)
     print('Waiting for job...')
 

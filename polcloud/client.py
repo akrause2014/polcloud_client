@@ -58,13 +58,15 @@ class Job:
         r.raise_for_status()
         return r.json()
 
-    def submit(self, size, wall_clock):
+    def submit(self, size, wall_clock, delete_pool=None):
         data = {
             'wall_clock' : wall_clock,
             'size': size,
             'pool_name' : self.pool.id,
             'job_spec' : self.spec
         }
+        if delete_pool:
+            data['delete_pool'] = delete_pool
         r = requests.post(JOBS, json=data, params=self.params)
         self.id = r.text
         return self.id
